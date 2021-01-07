@@ -2,14 +2,16 @@
 
 ## Under consideration to be deprecated!
 
-The current architecture of the backend client does not support easy addition of new features and there are quite many stability issues. Based on the initial analysis, major refactoring would be needed to make Backend client to support all the current use cases reliably. Hence, we are considering to break current backend client into focused functionalities that have value for wider community. This may imply that existing functionality is not supported anymore or it is supported in a new repository. More on this as work proceeds.
+The current architecture of the backend client does not support easy
+addition of new features and there are quite many stability issues.
 
-
-
-
-
-
-
+Based on the initial analysis, major refactoring would be needed to make
+Backend client to support all the current use cases reliably.
+Hence, we are considering to break current backend client into focused
+functionalities that have value for wider community.
+This may imply that existing functionality is not supported anymore or
+it is supported in a new repository.
+More on this as work proceeds.
 
 
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/bf0c23237cf04ea6ac48e98cf10b6a7b)](https://www.codacy.com/manual/wirepas/backend-client?utm_source=github.com&utm_medium=referral&utm_content=wirepas/backend-client&utm_campaign=Badge_Grade) [![Build Status](https://travis-ci.com/wirepas/backend-apis.svg?branch=master)](https://travis-ci.com/wirepas/backend-client)  [![Documentation Status](https://readthedocs.org/projects/backend-client/badge/?version=latest)](https://backend-client.readthedocs.io/en/latest/?badge=latest) [![PyPi](https://img.shields.io/pypi/v/wirepas-backend-client.svg)](https://pypi.org/project/wirepas-backend-client/)
@@ -18,10 +20,16 @@ The current architecture of the backend client does not support easy addition of
 
 1. [Introduction](#introduction)
 1. [Installation](#installation)
-    1. [Host dependencies](#host-dependencies)
-    1. [Setting up a Python virtual environment](#setting-up-a-python-virtual-environment)
-    1. [Installing from PyPi](#installing-from-pypi)
-    1. [Installing from Github](#installing-from-github)
+   1. [Building and running over Docker](#building-and-running-over-docker)
+        1. [Dockerhub](#dockerhub)
+        1. [Running with docker](#running-with-docker)
+        1. [Running with compose](#running-with-compose)
+        1. [Building the image locally](#building-the-image-locally)
+   1. [Manual installation](#manual-installation)
+        1. [Host dependencies](#host-dependencies)
+        1. [Setting up a Python virtual environment](#setting-up-a-python-virtual-environment)
+        1. [Installing from PyPi](#installing-from-pypi)
+        1. [Installing from Github](#installing-from-github)
 1. [Entrypoints](#entrypoints)
     1. [Gateway command line interface](#gateway-command-line-interface)
     1. [WPE Viewer](#wpe-viewer)
@@ -31,11 +39,6 @@ The current architecture of the backend client does not support easy addition of
     1. [Structure](#structure)
     1. [Examples](#examples)
 1. [Logging to fluentd](#logging-to-fluentd)
-1. [Building and running over Docker](#building-and-running-over-docker)
-    1. [Dockerhub](#dockerhub)
-    1. [Running with docker](#running-with-docker)
-    1. [Running with compose](#running-with-compose)
-    1. [Building the image locally](#building-the-image-locally)
 1. [Source documentation](#source-documentation)
 1. [Contributing](#contributing)
 1. [License](#license)
@@ -66,13 +69,109 @@ Figure 1 illustrates the horizon where Backend Client is located.
 
 ## Installation
 
-The Backend Client is written in python and it requires a valid MQTT
+There are two ways to run the backend-cllient, with `docker` or by
+installing all the dependencies manually.
+Docker is the preferred way.
+
+The Backend Client is written in Python and it requires a valid MQTT
 broker target to connect to, WNT or WPE credentials.
 
 If you need help installing a MQTT broker or auxiliary software please
 refer to our tutorials repository.
 
-### Host dependencies
+### Building and running over Docker
+
+Docker allows application to run on a sandbox containing
+all the dependencies needed to run and execute them.
+If you are not familiar with Docker, please refer to the
+official documentation at [docker.com][docker].
+
+#### Dockerhub
+
+Backend Client builds are available
+from dockerhub under the [Backend Client registry][backend_client_dockerhub].
+
+The latest tag points to the current stable release,
+whereas the edge tag points to the top of master.
+
+The latest tag is built automatically at dockerhub whenever this repository
+is tagged.
+
+The edge tag is built after each single merge into master.
+
+To pull the Backend Client image from dockerhub use:
+
+```shell
+    docker pull wirepas/backend-client:latest
+    docker pull wirepas/backend-client:<tag>
+```
+
+#### Running with docker
+
+As the container will have no access to your local environment, you will have
+to propagate the input parameters by mounting a local file inside the
+container,eg, _examples/settings.yml_.
+
+The default image command will launch the gateway client with the settings
+present under _/home/wirepas/vars/settings.yml_ (container path).
+
+To run it with docker type
+
+```shell
+    docker run -it \
+               -v $(pwd)/examples/settings.yml:/home/wirepas/backend-client/vars/settings.yml \
+               --net=host \
+               wirepas/backend-client \
+               wm-gw-cli \
+               --settings /home/wirepas/backend-client/vars/settings.yml \
+               --debug_level=critical
+```
+
+:warning: **WARNING** :warning:
+
+If you want to run against a MQTT running in your host (localhost),
+you must overlay the container over your host's network.
+To do so, you must set the docker run parameter _--net=host._
+
+#### Running with compose
+
+To run the Backend Client using docker compose, drop or move the settings
+file in **container/examples/settings.yml** and start the service with:
+
+```shell
+    docker-compose container/docker-compose.yml up
+```
+
+By default this will start the [MQTT viewer example][examples_mqtt_viewer].
+
+If you wish to run the gateway command client you can do so with:
+
+```shell
+    docker-compose -f container/docker-compose.yml \
+                   run \
+                   backend-client wm-gw-cli \
+                   --settings /home/wirepas/backend-client/vars/settings.yml
+```
+
+If you prefer alpine based images, please change _slim_ to _alpine_.
+
+#### Building the image locally
+
+To build the image locally in the root of the repo type:
+
+```shell
+    docker build -f container/slim/Dockerfile -t backend-client .
+```
+
+Alternatively you can also build using the docker-compose.yml present in
+the root of the directory:
+
+```shell
+    docker-compose -f container/docker-compose.yml  build
+```
+### Manual installation
+
+#### Host dependencies
 
 The main requirements of Backend Client are:
 
@@ -98,7 +197,7 @@ under the [container folder][here_container] for more detailed information.
 Windows native environments are not supported. For help running the tool
 in Windows, please use the Linux subsystem, Docker or a virtual machine.
 
-### Setting up a Python virtual environment
+#### Setting up a Python virtual environment
 
 As a recommendation, it is good practice to install and run the
 application on a virtual python environment. Such approach avoids
@@ -126,7 +225,7 @@ package under it.
 
 For more information please refer to the tool's webpage.
 
-### Installing from PyPi
+#### Installing from PyPi
 
 The Backend Client is available from
 [PyPi][backend_client_pypi] and you can install the latest stable version
@@ -139,7 +238,7 @@ with:
 If you wish to install a particular version please see the release history
 from PyPi.
 
-### Installing from Github
+#### Installing from Github
 
 First of all, make sure to clone the repository using the https address.
 
@@ -590,97 +689,6 @@ you configure the examples/settings.yml file with
     fluentd_hostname: "myfluenthost"
     fluentd_record: mesh
     fluentd_tag: app
-```
-
-## Building and running over Docker
-
-Docker allows application to run on a sandbox containing
-all the dependencies needed to run and execute them.
-If you are not familiar with Docker, please refer to the
-official documentation at [docker.com][docker].
-
-### Dockerhub
-
-Backend Client builds are available
-from dockerhub under the [Backend Client registry][backend_client_dockerhub].
-
-The latest tag points to the current stable release,
-whereas the edge tag points to the top of master.
-
-The latest tag is built automatically at dockerhub whenever this repository
-is tagged.
-
-The edge tag is built after each single merge into master.
-
-To pull the Backend Client image from dockerhub use:
-
-```shell
-    docker pull wirepas/backend-client:latest
-    docker pull wirepas/backend-client:<tag>
-```
-
-### Running with docker
-
-As the container will have no access to your local environment, you will have
-to propagate the input parameters by mounting a local file inside the
-container,eg, _examples/settings.yml_.
-
-The default image command will launch the gateway client with the settings
-present under _/home/wirepas/vars/settings.yml_ (container path).
-
-To run it with docker type
-
-```shell
-    docker run -it \
-               -v $(pwd)/examples/settings.yml:/home/wirepas/backend-client/vars/settings.yml \
-               --net=host \
-               wirepas/backend-client \
-               wm-gw-cli \
-               --settings /home/wirepas/backend-client/vars/settings.yml \
-               --debug_level=critical
-```
-
-:warning: **WARNING** :warning:
-
-If you want to run against a MQTT running in your host (localhost),
-you must overlay the container over your host's network.
-To do so, you must set the docker run parameter _--net=host._
-
-### Running with compose
-
-To run the Backend Client using docker compose, drop or move the settings
-file in **container/examples/settings.yml** and start the service with:
-
-```shell
-    docker-compose container/docker-compose.yml up
-```
-
-By default this will start the [MQTT viewer example][examples_mqtt_viewer].
-
-If you wish to run the gateway command client you can do so with:
-
-```shell
-    docker-compose -f container/docker-compose.yml \
-                   run \
-                   backend-client wm-gw-cli \
-                   --settings /home/wirepas/backend-client/vars/settings.yml
-```
-
-If you prefer alpine based images, please change _slim_ to _alpine_.
-
-### Building the image locally
-
-To build the image locally in the root of the repo type:
-
-```shell
-    docker build -f container/slim/Dockerfile -t backend-client .
-```
-
-Alternatively you can also build using the docker-compose.yml present in
-the root of the directory:
-
-```shell
-    docker-compose -f container/docker-compose.yml  build
 ```
 
 ## Source documentation
