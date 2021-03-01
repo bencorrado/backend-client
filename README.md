@@ -1,3 +1,7 @@
+:warning: | To be deprecated on March 31st 2021! The current backend-client repository will be replaced by a more comprehensive Backend Toolbox based on Python during March 2021. Please note that this existing backend-client repository will be removed on March 31st 2021.
+:---: | :---
+
+
 # Backend-client
 
 ## Under consideration to be deprecated!
